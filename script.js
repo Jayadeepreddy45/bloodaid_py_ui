@@ -239,6 +239,7 @@ function loadloginForm() {
 
 
 `);
+
   $("#login_form").on("submit", function (e) {
     e.preventDefault(); // Prevent page refresh
 
@@ -296,7 +297,7 @@ function loadDonorForm() {
             </div>
             <div class="mb-3">
                 <label for="donated-date" class="form-label">Donated date</label>
-                <input type="date" class="form-control" id="donated-date" name="donated-date" required>
+                <input type="date" class="form-control" id="donated_date" name="donated-date" required>
             </div>
             <div class="d-grid">
                 <button class="btn btn-primary bg-danger" type="submit">Donate</button>
@@ -315,13 +316,17 @@ function loadDonorForm() {
       units: $("#units").val(),
       disease: $("#disease").val(),
       donated_date: $("#donated_date").val(),
-      username: "jay",
     };
 
     console.log(Data);
+    const loginData = localStorage.getItem("login");
+
+    // Parse the login data to extract user_id
+    const parsedData = JSON.parse(loginData);
+    const userId = parsedData.user_id;
 
     $.ajax({
-      url: "http://localhost:5000/donor_form", // API endpoint
+      url: `http://localhost:5000/donor_form/${userId}`, // API endpoint
       type: "POST",
       dataType: "json",
       contentType: "application/json",
@@ -381,7 +386,6 @@ function loadPatientForm() {
       units: $("#units").val(),
       reason: $("#reason").val(),
       requested_date: $("#requested_date").val(),
-      username: "jay",
     };
     console.log(Data);
 
@@ -409,7 +413,9 @@ function loadViewRequests() {
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Units</th>
+                <th>User Id</th>                
+                <th>Units</th>                
+
                 <th>Reason</th>
                 <th>Requested Date</th>
             </tr>
@@ -426,6 +432,7 @@ function loadViewRequests() {
       let tableBody = "";
       response.viewrequests.forEach(function (request) {
         tableBody += `<tr>
+                            <td>${request.user_id}</td>
                             <td>${request.units}</td>
                             <td>${request.reason}</td>
                             <td>${request.requested_date}</td>
@@ -442,11 +449,29 @@ function loadViewRequests() {
 
 // Function to load view donations
 function loadViewDonations() {
+  // Retrieve user_id from local storage
+  const loginData = localStorage.getItem("login");
+
+  if (!loginData) {
+    alert("User is not logged in.");
+    return;
+  }
+
+  // Parse the login data to extract user_id
+  const parsedData = JSON.parse(loginData);
+  const userId = parsedData.user_id;
+
+  if (!userId) {
+    console.log("User is not logged in.");
+    return;
+  }
+
   $("#main_content").html(`
     <h3 style="text-align:center;">View Blood Donations</h3>
     <table class="table table-striped">
         <thead>
             <tr>
+                <th>User ID</th>
                 <th>Units</th>
                 <th>Disease</th>
                 <th>Donated Date</th>
@@ -454,26 +479,29 @@ function loadViewDonations() {
         </thead>
         <tbody id="donation_table_body"></tbody>
     </table>
-`);
+  `);
 
+  // Make AJAX request to fetch donations for the logged-in user
   $.ajax({
-    url: "http://localhost:5000/view_donations/1",
+    url: `http://localhost:5000/view_donations/${userId}`, // Using dynamic user_id
     type: "GET",
     dataType: "json",
     success: function (response) {
       let tableBody = "";
+
       response.donations.forEach(function (donation) {
         tableBody += `<tr>
-                            <td>${donation.units}</td>
-                            <td>${donation.disease}</td>
-                            <td>${donation.donated_date}</td>
-                          </tr>`;
+                          <td>${donation.user_id}</td>  
+                          <td>${donation.units}</td>
+                          <td>${donation.disease}</td>
+                          <td>${donation.donated_date}</td>
+                        </tr>`;
       });
+
       $("#donation_table_body").html(tableBody);
     },
     error: function (error) {
       console.error("Error fetching donations:", error);
-      alert("Failed to fetch donations.");
     },
   });
 }
@@ -528,9 +556,12 @@ function loadDonorHistory() {
     <table class="table table-striped">
         <thead>
             <tr>
+                <th>Donation Id</th>
+                <th>Blood group </th>
                 <th>Units</th>
                 <th>Disease</th>
-                <th>Donated Date</th>
+                <th>Donated_date</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody id="donor_history_table_body"></tbody>
@@ -545,16 +576,18 @@ function loadDonorHistory() {
       let tableBody = "";
       response.donorhistory.forEach(function (entry) {
         tableBody += `<tr>
+                            <td>${entry.donation_id}</td>
+                            <td>${entry.blood_group}</td>
                             <td>${entry.units}</td>
                             <td>${entry.disease}</td>
                             <td>${entry.donated_date}</td>
+                            <td>${entry.status}</td>
                           </tr>`;
       });
       $("#donor_history_table_body").html(tableBody);
     },
     error: function (error) {
       console.error("Error fetching donor history:", error);
-     
     },
   });
 }
@@ -566,9 +599,12 @@ function loadPatientHistory() {
     <table class="table table-striped">
         <thead>
             <tr>
+                <th>Request Id</th>
+                <th>Bloodgroup </th>
                 <th>Units</th>
                 <th>Reason</th>
-                <th>Requested Date</th>
+                <th>Requested_date</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody id="patient_history_table_body"></tbody>
@@ -583,9 +619,12 @@ function loadPatientHistory() {
       let tableBody = "";
       response.patienthistory.forEach(function (entry) {
         tableBody += `<tr>
+                            <td>${entry.request_id}</td>
+                            <td>${entry.blood_group}</td>
                             <td>${entry.units}</td>
                             <td>${entry.reason}</td>
                             <td>${entry.requested_date}</td>
+                            <td>${entry.status}</td>
                           </tr>`;
       });
       $("#patient_history_table_body").html(tableBody);
@@ -616,43 +655,78 @@ function loadDonorRequests() {
       </thead>
       <tbody id="donation_request_table_body"></tbody>
     </table>
-`);
+  `);
 
   $.ajax({
     url: "http://localhost:5000/donation_requests",
     type: "GET",
-    headers: {
-      accept: "application/json",
-    },
+    headers: { accept: "application/json" },
     success: function (response) {
       let tableBody = "";
-      response.donationrequests.forEach(function (entry) {
+
+      response.donationrequests.forEach((entry) => {
         tableBody += `<tr>
-                            <td>${entry.donation_id}</td>
-                            <td>${entry.username}</td>
-                            <td>${entry.blood_group}</td>
-                            <td>${entry.units}</td>
-                            <td>${entry.disease}</td>
-                            <td>${entry.donated_date}</td>
-                            <td>${entry.phone_number}</td>
-                            <td>
-                                <button class="btn btn-success accept-btn" data-id="${entry.donation_id}">Accept</button>
-                                <button class="btn btn-danger reject-btn" data-id="${entry.donation_id}">Reject</button>
-                                <span id="status_${entry.donation_id}">${entry.status}</span>
-                            </td>
-                        </tr>`;
+                        <td>${entry.donation_id}</td>
+                        <td>${entry.username}</td>
+                        <td>${entry.blood_group}</td>
+                        <td>${entry.units}</td>
+                        <td>${entry.disease}</td>
+                        <td>${entry.donated_date}</td>
+                        <td>${entry.phone_number}</td>
+                        <td id="status_${entry.donation_id}">`;
+
+        if (entry.status === "pending") {
+          tableBody += `<button class="btn btn-success update-donation-request" data-id="${entry.donation_id}" data-status="accepted">Accept</button>
+                        <button class="btn btn-danger update-donation-request" data-id="${entry.donation_id}" data-status="rejected">Reject</button>`;
+        } else {
+          tableBody += `<span>${entry.status}</span>`;
+        }
+
+        tableBody += `</td></tr>`;
       });
+
       $("#donation_request_table_body").html(tableBody);
 
-      // Add click event listeners to accept and reject buttons
-      $(".accept-btn").click(function () {
+      // Handle button clicks
+      $(".update-donation-request").click(function () {
         const donationId = $(this).data("id");
-        updateStatus(donationId, "Accepted");
+        const status = $(this).data("status");
+        const Data = {
+          status: status,
+        };
+
+        $.ajax({
+          url: `http://localhost:5000//update_donation_request/${donationId}`,
+          type: "PUT",
+          contentType: "application/json",
+          dataType: "json",
+          data: JSON.stringify(Data),
+          success: function (response) {
+            // Update the status text and remove the buttons
+            $(`button[data-id="${donationId}"]`).remove(); // Remove the clicked button
+            $(`#status_${donationId}`).html(`<span>${status}</span>`); // Update status text
+          },
+          error: function (error) {
+            console.error("Error accepting donation:", error);
+          },
+        });
       });
 
       $(".reject-btn").click(function () {
         const donationId = $(this).data("id");
-        updateStatus(donationId, "Rejected");
+
+        $.ajax({
+          url: `http://localhost:5000/delete/${donationId}`,
+          type: "POST",
+          success: function (response) {
+            // Update the status text and remove the buttons
+            $(`button[data-id="${donationId}"]`).remove(); // Remove the clicked button
+            $(`#status_${donationId}`).html(`<span>rejected</span>`); // Update status text
+          },
+          error: function (error) {
+            console.error("Error rejecting donation:", error);
+          },
+        });
       });
     },
     error: function (error) {
@@ -661,75 +735,99 @@ function loadDonorRequests() {
   });
 }
 
-// Function to update the status
-function updateStatus(donationId, status) {
-  // Update the status in the DOM
-  $(`#status_${donationId}`).text(status);
-
-  // Optionally, you can send an AJAX request to update the status in the backend
-  $.ajax({
-    url: `http://localhost:5000/donation_requests/${donationId}`,
-    type: "POST",
-    contentType: "application/json",
-    data: JSON.stringify({ status: status }),
-    success: function (response) {
-      console.log(`Status updated to ${status} for donation ID: ${donationId}`);
-    },
-    error: function (error) {
-      console.error("Error updating status:", error);
-    },
-  });
-}
-
 // Function to load patient requests
 function loadPatientRequests() {
-  $("#main_content").html(`<h1>Admin Patient Requests</h1>
+  $("#main_content").html(`
+    <h1>Admin Patient Requests</h1>
     <table class="table table-striped">
       <thead>
-        <tr><th>Patient ID</th>
-          <th>username</th>
-          <th>blood_group</th>
-          <th>units</th>
-          <th>reason</th>
-          <th>requested_date</th>
-          <th>phone_number</th>
-          <th>status</th>
-          </tr>
-          </thead>
-          <tbody id="patient_request_table_body">
-            </table>`);
+        <tr>
+          <th>Patient ID</th>
+          <th>Username</th>
+          <th>Blood Group</th>
+          <th>Units</th>
+          <th>Reason</th>
+          <th>Requested Date</th>
+          <th>Phone Number</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="patient_request_table_body"></tbody>
+    </table>
+  `);
 
   $.ajax({
     url: "http://localhost:5000/patient_requests",
     type: "GET",
-    headers: {
-      accept: "application/json",
-    },
+    headers: { accept: "application/json" },
     success: function (response) {
       let tableBody = "";
       response.patientrequests.forEach(function (entry) {
         tableBody += `<tr>
-                            <td>${entry.request_id}</td>
-                            <td>${entry.username}</td>
-                            <td>${entry.blood_group}</td>
-                            <td>${entry.units}</td>
-                            <td>${entry.reason}</td>
-                            <td>${entry.requested_date}</td>
-                            <td>${entry.phone_number}</td>
-                            <td>${entry.status}</td>
-                          </tr>`;
+                        <td>${entry.request_id}</td>
+                        <td>${entry.username}</td>
+                        <td>${entry.blood_group}</td>
+                        <td>${entry.units}</td>
+                        <td>${entry.reason}</td>
+                        <td>${entry.requested_date}</td>
+                        <td>${entry.phone_number}</td>
+                        <td id="status_${entry.request_id}">`;
+
+        if (entry.status === "pending") {
+          tableBody += `<button class="btn btn-success update-donation-request" data-id="${entry.request_id}">Accept</button>
+                        <button class="btn btn-danger reject-btn" data-id="${entry.request_id}">Reject</button>`;
+        } else {
+          tableBody += `<span>${entry.status}</span>`;
+        }
+
+        tableBody += `</td></tr>`; // Closing the table row properly
       });
+
       $("#patient_request_table_body").html(tableBody);
+
+      // Handle button clicks
+      $(".update-patient-request").click(function () {
+        const request_id = $(this).data("id");
+
+        $.ajax({
+          url: `http://localhost:5000/accept_patient/${request_id}`,
+          type: "POST",
+          success: function (response) {
+            // Update the status text and remove the buttons
+            $(`button[data-id="${request_id}"]`).remove(); // Remove the clicked button
+            $(`#status_${request_id}`).html(`<span>accepted</span>`); // Update status text
+          },
+          error: function (error) {
+            console.error("Error accepting request", error);
+          },
+        });
+      });
+
+      $(".reject-btn").click(function () {
+        const request_id = $(this).data("id");
+
+        $.ajax({
+          url: `http://localhost:5000/reject_patient_request/${request_id}`,
+          type: "POST",
+          success: function (response) {
+            // Update the status text and remove the buttons
+            $(`button[data-id="${request_id}"]`).remove(); // Remove the clicked button
+            $(`#status_${request_id}`).html(`<span>rejected</span>`); // Update status text
+          },
+          error: function (error) {
+            console.error("Error rejecting request:", error);
+          },
+        });
+      });
     },
     error: function (error) {
-      console.error("Error fetching patient history:", error);
-      alert("Failed to fetch patient history.");
+      console.error("Error fetching request:", error);
     },
   });
 }
 
 $(document).ready(function () {
-  console.log("page loaded")
+  console.log("page loaded");
   // Event handlers
   $("#donor_form_link").on("click", loadDonorForm);
   $("#patient_form_link").on("click", loadPatientForm);
@@ -744,7 +842,6 @@ $(document).ready(function () {
   $("#register_form_link").on("click", loadregisterForm);
   $("#logout").on("click", loadloginForm);
   shownavigation();
-
 
   $("#logout").on("click", function () {
     localStorage.removeItem("login");
