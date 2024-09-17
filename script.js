@@ -1,85 +1,79 @@
+function shownavigation() {
+  let loggedin = false;
+  let role_id = -1;
 
-$(document).ready(function () {
-  
-  function shownavigation() {
-    let loggedin = false;
-    let role_id = -1;
-  
-    // Retrieve login data from local storage
-    const x = localStorage.getItem("login");
-    const y = JSON.parse(x);
-  
-    // Check if user is logged in
-    if (y == null) {
-      console.log("user not logged in");
-    } else {
-      loggedin = true;
-      role_id = y["role_id"];
-      console.log("user logged in", y["role_id"]);
-    }
-  
-    // Default state: Only show login and register links if not logged in
-    if (!loggedin) {
-      $("#login_form_link").show();
-      $("#register_form_link").show();
-      $("#logout").hide();
-  
-      // Hide all role-specific links
+  // Retrieve login data from local storage
+  const x = localStorage.getItem("login");
+  const y = JSON.parse(x);
+
+  // Check if user is logged in
+  if (y == null) {
+    console.log("user not logged in");
+  } else {
+    loggedin = true;
+    role_id = y["role_id"];
+    console.log("user logged in", y["role_id"]);
+  }
+
+  // Default state: Only show login and register links if not logged in
+  if (!loggedin) {
+    $("#login_form_link").show();
+    $("#register_form_link").show();
+    $("#logout").hide();
+
+    // Hide all role-specific links
+    $("#donor_form_link").hide();
+    $("#patient_form_link").hide();
+    $("#view_requests_link").hide();
+    $("#view_donations_link").hide();
+    $("#blood_stock_link").hide();
+    $("#donor_history_link").hide();
+    $("#patient_history_link").hide();
+    $("#donor_requests_link").hide();
+    $("#patient_requests_link").hide();
+  } else {
+    // Hide login and register when logged in
+    $("#login_form_link").hide();
+    $("#register_form_link").hide();
+    $("#logout").show();
+
+    // Show links based on the role of the logged-in user
+    if (role_id == 1) {
+      // Donor role-specific navigation
       $("#donor_form_link").hide();
       $("#patient_form_link").hide();
       $("#view_requests_link").hide();
       $("#view_donations_link").hide();
+      $("#blood_stock_link").show();
+      $("#donor_history_link").show();
+      $("#patient_history_link").show();
+      $("#donor_requests_link").show();
+      $("#patient_requests_link").show();
+
+      // Load default view for role 1
+      loadViewStock();
+    } else if (role_id == 2) {
+      // Patient role-specific navigation
+      $("#donor_form_link").show();
+      $("#patient_form_link").show();
+      $("#view_requests_link").show();
+      $("#view_donations_link").show();
       $("#blood_stock_link").hide();
       $("#donor_history_link").hide();
       $("#patient_history_link").hide();
       $("#donor_requests_link").hide();
       $("#patient_requests_link").hide();
-  
-    } else {
-      // Hide login and register when logged in
-      $("#login_form_link").hide();
-      $("#register_form_link").hide();
-      $("#logout").show();
-  
-      // Show links based on the role of the logged-in user
-      if (role_id == 1) {
-        // Donor role-specific navigation
-        $("#donor_form_link").hide();
-        $("#patient_form_link").hide();
-        $("#view_requests_link").hide();
-        $("#view_donations_link").hide();
-        $("#blood_stock_link").show();
-        $("#donor_history_link").show();
-        $("#patient_history_link").show();
-        $("#donor_requests_link").show();
-        $("#patient_requests_link").show();
-  
-        // Load default view for role 1
-        loadViewStock();
-  
-      } else if (role_id == 2) {
-        // Patient role-specific navigation
-        $("#donor_form_link").show();
-        $("#patient_form_link").show();
-        $("#view_requests_link").show();
-        $("#view_donations_link").show();
-        $("#blood_stock_link").hide();
-        $("#donor_history_link").hide();
-        $("#patient_history_link").hide();
-        $("#donor_requests_link").hide();
-        $("#patient_requests_link").hide();
-  
-        // Load default view for role 2 (e.g., Donor Form)
-        loadDonorForm();
-      }
+
+      // Load default view for role 2 (e.g., Donor Form)
+      loadDonorForm();
     }
   }
-  
-  
+}
 
-  // Function to load donor form
-  function loadregisterForm() {
-    $("#main_content").html(`<div class="container d-flex justify-content-center align-items-center min-vh-100 " id="register_div">
+// Function to load donor form
+function loadregisterForm() {
+  $("#main_content")
+    .html(`<div class="container d-flex justify-content-center align-items-center min-vh-100 " id="register_div">
     <form id = "register_form" class="row g-3 col-md-6 col-lg-4" action="/register" method="post">
         <div class="col-md-6">
           <label for="inputEmail4" class="form-label">Username</label>
@@ -175,57 +169,56 @@ $(document).ready(function () {
 </div>
 
 `);
-    $("#register_form").on("submit", function (e) {
-        e.preventDefault(); // Prevent page refresh
-    
-        const Data = {
-          username: $("#username").val(),
-          password: $("#password").val(),
-          email: $("#email").val(),
-          DOB: $("#DOB").val(),
-          bloodgroup: $("#bloodgroup").val(),
-          address: $("#address").val(),
-          city: $("#city").val(),
-          state: $("#state").val(),
-          pincode: $("#pincode").val(),
-      
-        };
-    
-        console.log(Data);
-    
-        $.ajax({
-          url: "'http://localhost:5000/register" , // API endpoint
-          type: "POST",
-          dataType: "json",
-          contentType: "application/json",
-          data: JSON.stringify(Data),
-    
-          success: function (response) {
-            console.log(response);
-            localStorage.setItem("register", JSON.stringify(response));
-    
-            shownavigation();
-    
-            const elem = `  <div class2="alert alert-success" role="alert">
+  $("#register_form").on("submit", function (e) {
+    e.preventDefault(); // Prevent page refresh
+
+    const Data = {
+      username: $("#username").val(),
+      password: $("#password").val(),
+      email: $("#email").val(),
+      DOB: $("#DOB").val(),
+      bloodgroup: $("#bloodgroup").val(),
+      address: $("#address").val(),
+      city: $("#city").val(),
+      state: $("#state").val(),
+      pincode: $("#pincode").val(),
+    };
+
+    console.log(Data);
+
+    $.ajax({
+      url: "'http://localhost:5000/register", // API endpoint
+      type: "POST",
+      dataType: "json",
+      contentType: "application/json",
+      data: JSON.stringify(Data),
+
+      success: function (response) {
+        console.log(response);
+        localStorage.setItem("register", JSON.stringify(response));
+
+        shownavigation();
+
+        const elem = `  <div class2="alert alert-success" role="alert">
               registration successfully!
             </div>`;
-            $("#register_form").append(elem);
-          },
-          error: function (error) {
-            console.error("Error:", error);
-            const elem = `  <div class="alert alert-danger" role="alert">
+        $("#register_form").append(elem);
+      },
+      error: function (error) {
+        console.error("Error:", error);
+        const elem = `  <div class="alert alert-danger" role="alert">
               Login failed!
             </div>`;
-            $("#register_form").append(elem);
-          },
-        });
-      });
-  }
+        $("#register_form").append(elem);
+      },
+    });
+  });
+}
 
-
-  // Function to load donor form
-  function loadloginForm() {
-    $("#main_content").html(`<div class="container d-flex justify-content-center align-items-center min-vh-100" style="margin-top: -50px;">
+// Function to load donor form
+function loadloginForm() {
+  $("#main_content")
+    .html(`<div class="container d-flex justify-content-center align-items-center min-vh-100" style="margin-top: -50px;">
     <div id="login_div" class="d-flex flex-column align-items-center" style="width: 100%; max-width: 375px;">
         <h1 class="text-center mb-4">Login</h1>
         <form action="/login" id="login_form" method="post" class="w-100" style="padding: 20px; background-color: #f8f9fa; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
@@ -246,50 +239,49 @@ $(document).ready(function () {
 
 
 `);
-    $("#login_form").on("submit", function (e) {
-        e.preventDefault(); // Prevent page refresh
-    
-        const Data = {
-          username: $("#username").val(),
-          password: $("#password").val(),
-        };
-    
-        console.log(Data);
-    
-        $.ajax({
-          url: "http://localhost:5000/login" , // API endpoint
-          type: "POST",
-          dataType: "json",
-          contentType: "application/json",
-          data: JSON.stringify(Data),
-    
-          success: function (response) {
-            console.log(response);
-            localStorage.setItem("login", JSON.stringify(response));
-    
-            shownavigation();
-    
-            const elem = `  <div class="alert alert-success" role="alert">
+  $("#login_form").on("submit", function (e) {
+    e.preventDefault(); // Prevent page refresh
+
+    const Data = {
+      username: $("#username").val(),
+      password: $("#password").val(),
+    };
+
+    console.log(Data);
+
+    $.ajax({
+      url: "http://localhost:5000/login", // API endpoint
+      type: "POST",
+      dataType: "json",
+      contentType: "application/json",
+      data: JSON.stringify(Data),
+
+      success: function (response) {
+        console.log(response);
+        localStorage.setItem("login", JSON.stringify(response));
+
+        shownavigation();
+
+        const elem = `  <div class="alert alert-success" role="alert">
               Login successfully!
             </div>`;
-            $("#login_form").append(elem);
-          },
-          error: function (error) {
-            console.error("Error:", error);
-            const elem = `  <div class="alert alert-danger" role="alert">
+        $("#login_form").append(elem);
+      },
+      error: function (error) {
+        console.error("Error:", error);
+        const elem = `  <div class="alert alert-danger" role="alert">
               Login failed!
             </div>`;
-            $("#login_form").append(elem);
-          },
-        });
-      });
-  }
+        $("#login_form").append(elem);
+      },
+    });
+  });
+}
 
-  // Function to load donor form
-  function loadDonorForm() {
-    $(
-      "#main_content"
-    ).html(`  <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+// Function to load donor form
+function loadDonorForm() {
+  $("#main_content")
+    .html(`  <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
 <div class="col-md-3">
       <h3 style="text-align: center;"> Donote blood</h3>
         <form class="g-3 mb-3"  id="donor_form" method="post">
@@ -316,48 +308,47 @@ $(document).ready(function () {
       
     `);
 
-    $("#donor_form").on("submit", function (e) {
-      e.preventDefault(); // Prevent page refresh
+  $("#donor_form").on("submit", function (e) {
+    e.preventDefault(); // Prevent page refresh
 
-      const Data = {
-        units: $("#units").val(),
-        disease: $("#disease").val(),
-        donated_date: $("#donated_date").val(),
-        username: "jay",
-      };
+    const Data = {
+      units: $("#units").val(),
+      disease: $("#disease").val(),
+      donated_date: $("#donated_date").val(),
+      username: "jay",
+    };
 
-      console.log(Data);
+    console.log(Data);
 
-      $.ajax({
-        url: "http://localhost:5000/donor_form", // API endpoint
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json",
-        data: JSON.stringify(Data),
+    $.ajax({
+      url: "http://localhost:5000/donor_form", // API endpoint
+      type: "POST",
+      dataType: "json",
+      contentType: "application/json",
+      data: JSON.stringify(Data),
 
-        success: function (response) {
-          console.log(response);
-          const elem = `  <div class="alert alert-success" role="alert">
+      success: function (response) {
+        console.log(response);
+        const elem = `  <div class="alert alert-success" role="alert">
             Donation submitted successfully!
           </div>`;
-          $("#donor_form").append(elem);
-        },
-        error: function (error) {
-          console.error("Error:", error);
-          const elem = `  <div class="alert alert-success" role="alert">
+        $("#donor_form").append(elem);
+      },
+      error: function (error) {
+        console.error("Error:", error);
+        const elem = `  <div class="alert alert-success" role="alert">
             Donation submitted successfully!
           </div>`;
-          $("#donor_form").append();
-        },
-      });
+        $("#donor_form").append();
+      },
     });
-  }
+  });
+}
 
-  // Function to load patient form
-  function loadPatientForm() {
-    $(
-      "#main_content"
-    ).html(`  <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+// Function to load patient form
+function loadPatientForm() {
+  $("#main_content")
+    .html(`  <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
 <div class="col-md-3">
       <h3 style="text-align: center;"> Request blood</h3>
         <form class="g-3 mb-3" id="patient_form" method="post">
@@ -383,37 +374,37 @@ $(document).ready(function () {
 </div>
     `);
 
-    $("#patient_form").on("submit", function (e) {
-      e.preventDefault(); // Prevent page refresh
+  $("#patient_form").on("submit", function (e) {
+    e.preventDefault(); // Prevent page refresh
 
-      const Data = {
-        units: $("#units").val(),
-        reason: $("#reason").val(),
-        requested_date: $("#requested_date").val(),
-        username: "jay",
-      };
-      console.log(Data);
+    const Data = {
+      units: $("#units").val(),
+      reason: $("#reason").val(),
+      requested_date: $("#requested_date").val(),
+      username: "jay",
+    };
+    console.log(Data);
 
-      $.ajax({
-        url: "http://localhost:5000/patient_form",
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json",
-        data: JSON.stringify(Data),
-        success: function (response) {
-          alert("Request submitted successfully!");
-        },
-        error: function (error) {
-          console.error("Error:", error);
-          alert("Failed to submit request.");
-        },
-      });
+    $.ajax({
+      url: "http://localhost:5000/patient_form",
+      type: "POST",
+      dataType: "json",
+      contentType: "application/json",
+      data: JSON.stringify(Data),
+      success: function (response) {
+        alert("Request submitted successfully!");
+      },
+      error: function (error) {
+        console.error("Error:", error);
+        alert("Failed to submit request.");
+      },
     });
-  }
+  });
+}
 
-  // Function to load view requests
-  function loadViewRequests() {
-    $("#main_content").html(`
+// Function to load view requests
+function loadViewRequests() {
+  $("#main_content").html(`
     <h3 style="text-align:center;">View Blood Requests</h3>
     <table class="table table-striped">
         <thead>
@@ -427,31 +418,31 @@ $(document).ready(function () {
     </table>
 `);
 
-    $.ajax({
-      url: "http://localhost:5000/view_requests/jay",
-      type: "GET",
-      dataType: "json",
-      success: function (response) {
-        let tableBody = "";
-        response.viewrequests.forEach(function (request) {
-          tableBody += `<tr>
+  $.ajax({
+    url: "http://localhost:5000/view_requests/1",
+    type: "GET",
+    dataType: "json",
+    success: function (response) {
+      let tableBody = "";
+      response.viewrequests.forEach(function (request) {
+        tableBody += `<tr>
                             <td>${request.units}</td>
                             <td>${request.reason}</td>
                             <td>${request.requested_date}</td>
                           </tr>`;
-        });
-        $("#request_table_body").html(tableBody);
-      },
-      error: function (error) {
-        console.error("Error fetching requests:", error);
-        alert("Failed to fetch requests.");
-      },
-    });
-  }
+      });
+      $("#request_table_body").html(tableBody);
+    },
+    error: function (error) {
+      console.error("Error fetching requests:", error);
+      alert("Failed to fetch requests.");
+    },
+  });
+}
 
-  // Function to load view donations
-  function loadViewDonations() {
-    $("#main_content").html(`
+// Function to load view donations
+function loadViewDonations() {
+  $("#main_content").html(`
     <h3 style="text-align:center;">View Blood Donations</h3>
     <table class="table table-striped">
         <thead>
@@ -465,31 +456,31 @@ $(document).ready(function () {
     </table>
 `);
 
-    $.ajax({
-      url: "http://localhost:5000/view_donations",
-      type: "GET",
-      dataType: "json",
-      success: function (response) {
-        let tableBody = "";
-        response.donations.forEach(function (donation) {
-          tableBody += `<tr>
+  $.ajax({
+    url: "http://localhost:5000/view_donations/1",
+    type: "GET",
+    dataType: "json",
+    success: function (response) {
+      let tableBody = "";
+      response.donations.forEach(function (donation) {
+        tableBody += `<tr>
                             <td>${donation.units}</td>
                             <td>${donation.disease}</td>
                             <td>${donation.donated_date}</td>
                           </tr>`;
-        });
-        $("#donation_table_body").html(tableBody);
-      },
-      error: function (error) {
-        console.error("Error fetching donations:", error);
-        alert("Failed to fetch donations.");
-      },
-    });
-  }
+      });
+      $("#donation_table_body").html(tableBody);
+    },
+    error: function (error) {
+      console.error("Error fetching donations:", error);
+      alert("Failed to fetch donations.");
+    },
+  });
+}
 
-  // Function to load view stock
-  function loadViewStock() {
-    $("#main_content").html(`<div class="container mt-5">
+// Function to load view stock
+function loadViewStock() {
+  $("#main_content").html(`<div class="container mt-5">
       <h1>Blood Stock</h1>
       <div class="row" id="blood-stock-container">
           <!-- Blood stock data will be dynamically loaded here -->
@@ -499,19 +490,19 @@ $(document).ready(function () {
     
     `);
 
-    // to fetch bloodstock data
-    $.ajax({
-      url: "http://localhost:5000/blood_stock", // Endpoint to fetch blood stock data
-      method: "GET",
-      success: function (data) {
-        let container = $("#blood-stock-container");
+  // to fetch bloodstock data
+  $.ajax({
+    url: "http://localhost:5000/blood_stock", // Endpoint to fetch blood stock data
+    method: "GET",
+    success: function (data) {
+      let container = $("#blood-stock-container");
 
-        // Clear the container
-        container.empty();
+      // Clear the container
+      container.empty();
 
-        // Iterate over the JSON data and generate cards
-        $.each(data, function (blood_group, units) {
-          let card = `
+      // Iterate over the JSON data and generate cards
+      $.each(data, function (blood_group, units) {
+        let card = `
                     <div class="col-md-4 mb-4">
                         <div class="card">
                             <div class="card-body">
@@ -521,18 +512,18 @@ $(document).ready(function () {
                         </div>
                     </div>
                 `;
-          container.append(card);
-        });
-      },
-      error: function (error) {
-        console.error("Error fetching blood stock data:", error);
-      },
-    });
-  }
+        container.append(card);
+      });
+    },
+    error: function (error) {
+      console.error("Error fetching blood stock data:", error);
+    },
+  });
+}
 
-  // Function to load donor history
-  function loadDonorHistory() {
-    $("#main_content").html(`
+// Function to load donor history
+function loadDonorHistory() {
+  $("#main_content").html(`
     <h3 style="text-align:center;">Admin Donor History</h3>
     <table class="table table-striped">
         <thead>
@@ -546,31 +537,31 @@ $(document).ready(function () {
     </table>
 `);
 
-    $.ajax({
-      url: "http://localhost:5000/donor_history",
-      type: "GET",
-      dataType: "json",
-      success: function (response) {
-        let tableBody = "";
-        response.donorhistory.forEach(function (entry) {
-          tableBody += `<tr>
+  $.ajax({
+    url: "http://localhost:5000/donor_history",
+    type: "GET",
+    dataType: "json",
+    success: function (response) {
+      let tableBody = "";
+      response.donorhistory.forEach(function (entry) {
+        tableBody += `<tr>
                             <td>${entry.units}</td>
                             <td>${entry.disease}</td>
                             <td>${entry.donated_date}</td>
                           </tr>`;
-        });
-        $("#donor_history_table_body").html(tableBody);
-      },
-      error: function (error) {
-        console.error("Error fetching donor history:", error);
-        alert("Failed to fetch donor history.");
-      },
-    });
-  }
+      });
+      $("#donor_history_table_body").html(tableBody);
+    },
+    error: function (error) {
+      console.error("Error fetching donor history:", error);
+     
+    },
+  });
+}
 
-  // Function to load patient history
-  function loadPatientHistory() {
-    $("#main_content").html(`
+// Function to load patient history
+function loadPatientHistory() {
+  $("#main_content").html(`
     <h3 style="text-align:center;">Admin Patient History</h3>
     <table class="table table-striped">
         <thead>
@@ -584,31 +575,31 @@ $(document).ready(function () {
     </table>
 `);
 
-    $.ajax({
-      url: "http://localhost:5000/patient_history",
-      type: "GET",
-      dataType: "json",
-      success: function (response) {
-        let tableBody = "";
-        response.patienthistory.forEach(function (entry) {
-          tableBody += `<tr>
+  $.ajax({
+    url: "http://localhost:5000/patient_history",
+    type: "GET",
+    dataType: "json",
+    success: function (response) {
+      let tableBody = "";
+      response.patienthistory.forEach(function (entry) {
+        tableBody += `<tr>
                             <td>${entry.units}</td>
                             <td>${entry.reason}</td>
                             <td>${entry.requested_date}</td>
                           </tr>`;
-        });
-        $("#patient_history_table_body").html(tableBody);
-      },
-      error: function (error) {
-        console.error("Error fetching patient history:", error);
-        alert("Failed to fetch patient history.");
-      },
-    });
-  }
+      });
+      $("#patient_history_table_body").html(tableBody);
+    },
+    error: function (error) {
+      console.error("Error fetching patient history:", error);
+      alert("Failed to fetch patient history.");
+    },
+  });
+}
 
-  // Function to load donor requests
-  function loadDonorRequests() {
-    $("#main_content").html(`
+// Function to load donor requests
+function loadDonorRequests() {
+  $("#main_content").html(`
     <h1>Admin Donor Requests</h1>
     <table class="table table-striped">
       <thead>
@@ -627,16 +618,16 @@ $(document).ready(function () {
     </table>
 `);
 
-    $.ajax({
-      url: "http://localhost:5000/donation_requests",
-      type: "GET",
-      headers: {
-        accept: "application/json",
-      },
-      success: function (response) {
-        let tableBody = "";
-        response.donationrequests.forEach(function (entry) {
-          tableBody += `<tr>
+  $.ajax({
+    url: "http://localhost:5000/donation_requests",
+    type: "GET",
+    headers: {
+      accept: "application/json",
+    },
+    success: function (response) {
+      let tableBody = "";
+      response.donationrequests.forEach(function (entry) {
+        tableBody += `<tr>
                             <td>${entry.donation_id}</td>
                             <td>${entry.username}</td>
                             <td>${entry.blood_group}</td>
@@ -650,51 +641,49 @@ $(document).ready(function () {
                                 <span id="status_${entry.donation_id}">${entry.status}</span>
                             </td>
                         </tr>`;
-        });
-        $("#donation_request_table_body").html(tableBody);
+      });
+      $("#donation_request_table_body").html(tableBody);
 
-        // Add click event listeners to accept and reject buttons
-        $(".accept-btn").click(function () {
-          const donationId = $(this).data("id");
-          updateStatus(donationId, "Accepted");
-        });
+      // Add click event listeners to accept and reject buttons
+      $(".accept-btn").click(function () {
+        const donationId = $(this).data("id");
+        updateStatus(donationId, "Accepted");
+      });
 
-        $(".reject-btn").click(function () {
-          const donationId = $(this).data("id");
-          updateStatus(donationId, "Rejected");
-        });
-      },
-      error: function (error) {
-        console.error("Error fetching donation requests:", error);
-      },
-    });
-  }
+      $(".reject-btn").click(function () {
+        const donationId = $(this).data("id");
+        updateStatus(donationId, "Rejected");
+      });
+    },
+    error: function (error) {
+      console.error("Error fetching donation requests:", error);
+    },
+  });
+}
 
-  // Function to update the status
-  function updateStatus(donationId, status) {
-    // Update the status in the DOM
-    $(`#status_${donationId}`).text(status);
+// Function to update the status
+function updateStatus(donationId, status) {
+  // Update the status in the DOM
+  $(`#status_${donationId}`).text(status);
 
-    // Optionally, you can send an AJAX request to update the status in the backend
-    $.ajax({
-      url: `http://localhost:5000/donation_requests/${donationId}`,
-      type: "POST",
-      contentType: "application/json",
-      data: JSON.stringify({ status: status }),
-      success: function (response) {
-        console.log(
-          `Status updated to ${status} for donation ID: ${donationId}`
-        );
-      },
-      error: function (error) {
-        console.error("Error updating status:", error);
-      },
-    });
-  }
+  // Optionally, you can send an AJAX request to update the status in the backend
+  $.ajax({
+    url: `http://localhost:5000/donation_requests/${donationId}`,
+    type: "POST",
+    contentType: "application/json",
+    data: JSON.stringify({ status: status }),
+    success: function (response) {
+      console.log(`Status updated to ${status} for donation ID: ${donationId}`);
+    },
+    error: function (error) {
+      console.error("Error updating status:", error);
+    },
+  });
+}
 
-  // Function to load patient requests
-  function loadPatientRequests() {
-    $("#main_content").html(`<h1>Admin Patient Requests</h1>
+// Function to load patient requests
+function loadPatientRequests() {
+  $("#main_content").html(`<h1>Admin Patient Requests</h1>
     <table class="table table-striped">
       <thead>
         <tr><th>Patient ID</th>
@@ -710,16 +699,16 @@ $(document).ready(function () {
           <tbody id="patient_request_table_body">
             </table>`);
 
-    $.ajax({
-      url: "http://localhost:5000/patient_requests",
-      type: "GET",
-      headers: {
-        accept: "application/json",
-      },
-      success: function (response) {
-        let tableBody = "";
-        response.patientrequests.forEach(function (entry) {
-          tableBody += `<tr>
+  $.ajax({
+    url: "http://localhost:5000/patient_requests",
+    type: "GET",
+    headers: {
+      accept: "application/json",
+    },
+    success: function (response) {
+      let tableBody = "";
+      response.patientrequests.forEach(function (entry) {
+        tableBody += `<tr>
                             <td>${entry.request_id}</td>
                             <td>${entry.username}</td>
                             <td>${entry.blood_group}</td>
@@ -729,15 +718,18 @@ $(document).ready(function () {
                             <td>${entry.phone_number}</td>
                             <td>${entry.status}</td>
                           </tr>`;
-        });
-        $("#patient_request_table_body").html(tableBody);
-      },
-      error: function (error) {
-        console.error("Error fetching patient history:", error);
-        alert("Failed to fetch patient history.");
-      },
-    });
-  }
+      });
+      $("#patient_request_table_body").html(tableBody);
+    },
+    error: function (error) {
+      console.error("Error fetching patient history:", error);
+      alert("Failed to fetch patient history.");
+    },
+  });
+}
+
+$(document).ready(function () {
+  console.log("page loaded")
   // Event handlers
   $("#donor_form_link").on("click", loadDonorForm);
   $("#patient_form_link").on("click", loadPatientForm);
@@ -751,12 +743,11 @@ $(document).ready(function () {
   $("#login_form_link").on("click", loadloginForm);
   $("#register_form_link").on("click", loadregisterForm);
   $("#logout").on("click", loadloginForm);
+  shownavigation();
+
 
   $("#logout").on("click", function () {
     localStorage.removeItem("login");
     shownavigation();
-    
   });
 });
-
-
