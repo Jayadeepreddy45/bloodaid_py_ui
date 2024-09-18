@@ -352,6 +352,8 @@ function loadDonorForm() {
 
 // Function to load patient form
 function loadPatientForm() {
+
+  
   $("#main_content")
     .html(`  <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
 <div class="col-md-3">
@@ -388,9 +390,15 @@ function loadPatientForm() {
       requested_date: $("#requested_date").val(),
     };
     console.log(Data);
+    const loginData = localStorage.getItem("login");
+
+    // Parse the login data to extract user_id
+    const parsedData = JSON.parse(loginData);
+    const userId = parsedData.user_id;
+    console.log(Data);
 
     $.ajax({
-      url: "http://localhost:5000/patient_form",
+      url: `http://localhost:5000/patient_form/${userId}`,
       type: "POST",
       dataType: "json",
       contentType: "application/json",
@@ -408,6 +416,15 @@ function loadPatientForm() {
 
 // Function to load view requests
 function loadViewRequests() {
+
+  const loginData = localStorage.getItem("login");
+
+
+
+  // Parse the login data to extract user_id
+  const parsedData = JSON.parse(loginData);
+  const userId = parsedData.user_id;
+
   $("#main_content").html(`
     <h3 style="text-align:center;">View Blood Requests</h3>
     <table class="table table-striped">
@@ -425,7 +442,7 @@ function loadViewRequests() {
 `);
 
   $.ajax({
-    url: "http://localhost:5000/view_requests/1",
+    url: `http://localhost:5000/view_requests/${userId}`,
     type: "GET",
     dataType: "json",
     success: function (response) {
@@ -452,10 +469,6 @@ function loadViewDonations() {
   // Retrieve user_id from local storage
   const loginData = localStorage.getItem("login");
 
-  if (!loginData) {
-    alert("User is not logged in.");
-    return;
-  }
 
   // Parse the login data to extract user_id
   const parsedData = JSON.parse(loginData);
