@@ -175,6 +175,7 @@ function loadregisterForm() {
     const Data = {
       username: $("#username").val(),
       password: $("#password").val(),
+      phone_number: $("#phonenumber").val(),
       email: $("#email").val(),
       DOB: $("#DOB").val(),
       bloodgroup: $("#bloodgroup").val(),
@@ -187,7 +188,7 @@ function loadregisterForm() {
     console.log(Data);
 
     $.ajax({
-      url: "'http://localhost:5000/register", // API endpoint
+      url: "http://localhost:5000/register", // API endpoint
       type: "POST",
       dataType: "json",
       contentType: "application/json",
@@ -197,7 +198,7 @@ function loadregisterForm() {
         console.log(response);
         localStorage.setItem("register", JSON.stringify(response));
 
-        shownavigation();
+        loadloginForm();
 
         const elem = `  <div class2="alert alert-success" role="alert">
               registration successfully!
@@ -207,7 +208,7 @@ function loadregisterForm() {
       error: function (error) {
         console.error("Error:", error);
         const elem = `  <div class="alert alert-danger" role="alert">
-              Login failed!
+              Registration failed!
             </div>`;
         $("#register_form").append(elem);
       },
@@ -231,7 +232,7 @@ function loadloginForm() {
                 <input type="password" name="password" class="form-control" id="password" required>
             </div>
             <input type="submit" value="Login" class="btn btn-primary w-100 bg-danger">
-            <p class="text-center mt-3">Don't have an account? <a href="/register">Register here</a></p>
+            <p id="redirect_register" class="text-center mt-3">Don't have an account? <a href="#">Register here</a></p>
         </form>
     </div>
 </div>
@@ -853,6 +854,7 @@ $(document).ready(function () {
   $("#patient_requests_link").on("click", loadPatientRequests);
   $("#login_form_link").on("click", loadloginForm);
   $("#register_form_link").on("click", loadregisterForm);
+  $("#redirect_register").on("click", loadregisterForm);
   $("#logout").on("click", loadloginForm);
   shownavigation();
 
