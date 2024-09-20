@@ -1,3 +1,7 @@
+// const url = 'http://localhost/bloodaidphp-api' // this is for php api
+
+const url = 'http://localhost:5000' // this is for py api
+
 function shownavigation() {
   let loggedin = false;
   let role_id = -1;
@@ -188,7 +192,7 @@ function loadregisterForm() {
     console.log(Data);
 
     $.ajax({
-      url: "http://localhost:5000/register", // API endpoint
+      url:  url + "/register", // API endpoint
       type: "POST",
       dataType: "json",
       contentType: "application/json",
@@ -241,6 +245,8 @@ function loadloginForm() {
 
 `);
 
+$("#redirect_register").on("click", loadregisterForm);
+
   $("#login_form").on("submit", function (e) {
     e.preventDefault(); // Prevent page refresh
 
@@ -252,7 +258,7 @@ function loadloginForm() {
     console.log(Data);
 
     $.ajax({
-      url: "http://localhost:5000/login", // API endpoint
+      url: `${url}/login`, // API endpoint
       type: "POST",
       dataType: "json",
       contentType: "application/json",
@@ -327,7 +333,7 @@ function loadDonorForm() {
     const userId = parsedData.user_id;
 
     $.ajax({
-      url: `http://localhost:5000/donor_form/${userId}`, // API endpoint
+      url: `${url}/donor_form/${userId}`, // API endpoint
       type: "POST",
       dataType: "json",
       contentType: "application/json",
@@ -405,11 +411,14 @@ function loadPatientForm() {
       contentType: "application/json",
       data: JSON.stringify(Data),
       success: function (response) {
-        alert("Request submitted successfully!");
+        const elem = `  <div class="alert alert-success" role="alert">
+        Request  submitted successfully!
+      </div>`;
+    $("#patient_form").append(elem);
       },
       error: function (error) {
         console.error("Error:", error);
-        alert("Failed to submit request.");
+       
       },
     });
   });
@@ -725,23 +734,6 @@ function loadDonorRequests() {
           },
         });
       });
-
-      $(".reject-btn").click(function () {
-        const donationId = $(this).data("id");
-
-        $.ajax({
-          url: `http://localhost:5000/delete/${donationId}`,
-          type: "POST",
-          success: function (response) {
-            // Update the status text and remove the buttons
-            $(`button[data-id="${donationId}"]`).remove(); // Remove the clicked button
-            $(`#status_${donationId}`).html(`<span>rejected</span>`); // Update status text
-          },
-          error: function (error) {
-            console.error("Error rejecting donation:", error);
-          },
-        });
-      });
     },
     error: function (error) {
       console.error("Error fetching donation requests:", error);
@@ -788,8 +780,8 @@ function loadPatientRequests() {
                         <td id="status_${entry.request_id}">`;
 
         if (entry.status === "pending") {
-          tableBody += `<button class="btn btn-success update-donation-request" data-id="${entry.request_id}">Accept</button>
-                        <button class="btn btn-danger reject-btn" data-id="${entry.request_id}">Reject</button>`;
+          tableBody += `<button class="btn btn-success update-patient-request" data-id="${entry.request_id}" data-status="accepted">Accept</button>
+                        <button class="btn btn-danger update-patient-request" data-id="${entry.request_id}" data-status="rejected">Reject</button>`;
         } else {
           tableBody += `<span>${entry.status}</span>`;
         }
@@ -798,41 +790,36 @@ function loadPatientRequests() {
       });
 
       $("#patient_request_table_body").html(tableBody);
-
+      
       // Handle button clicks
       $(".update-patient-request").click(function () {
-        const request_id = $(this).data("id");
+        const requestId = $(this).data("id");
+        const status = $(this).data("status");
+        console.log(status);
+        const Data = {
+          status: status,
+        };
 
         $.ajax({
-          url: `http://localhost:5000/accept_patient/${request_id}`,
-          type: "POST",
+          url: `http://localhost:5000/update_patient_request/${requestId}`,
+          type: "PUT",
+          contentType: "application/json",
+          dataType: "json",
+          data: JSON.stringify(Data),
           success: function (response) {
             // Update the status text and remove the buttons
-            $(`button[data-id="${request_id}"]`).remove(); // Remove the clicked button
-            $(`#status_${request_id}`).html(`<span>accepted</span>`); // Update status text
+            $(`button[data-id="${requestId}"]`).remove(); // Remove the clicked button
+            $(`#status_${requestId}`).html(`<span>${status}</span>`); // Update status text
           },
           error: function (error) {
-            console.error("Error accepting request", error);
+            console.error("Error accepting request:", error);
           },
         });
-      });
+      }
+      
 
-      $(".reject-btn").click(function () {
-        const request_id = $(this).data("id");
+   );
 
-        $.ajax({
-          url: `http://localhost:5000/reject_patient_request/${request_id}`,
-          type: "POST",
-          success: function (response) {
-            // Update the status text and remove the buttons
-            $(`button[data-id="${request_id}"]`).remove(); // Remove the clicked button
-            $(`#status_${request_id}`).html(`<span>rejected</span>`); // Update status text
-          },
-          error: function (error) {
-            console.error("Error rejecting request:", error);
-          },
-        });
-      });
     },
     error: function (error) {
       console.error("Error fetching request:", error);
@@ -854,7 +841,6 @@ $(document).ready(function () {
   $("#patient_requests_link").on("click", loadPatientRequests);
   $("#login_form_link").on("click", loadloginForm);
   $("#register_form_link").on("click", loadregisterForm);
-  $("#redirect_register").on("click", loadregisterForm);
   $("#logout").on("click", loadloginForm);
   shownavigation();
 
